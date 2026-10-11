@@ -46,11 +46,11 @@ namespace TSCGenerator
 		const doubles& GetP(void){if(isInit)return pi;throw CGeneratorException();}
 
 	protected:
-		inline void InitModel(void);
-		inline void GenerateOne(void);
+		inline virtual void InitModel(void);
+		inline virtual void GenerateOne(void);
 		void TransposeSample(void);
 
-	private:
+	protected:
 		bool isInit;
 		doubles distribution;//p0,pn-2,pch,padv as vector watch the order
 		doubles sample;//square matrix of pij as one long array n^2
@@ -62,4 +62,39 @@ namespace TSCGenerator
 		CChenUFDD *poly;
 	};
 
+	//****************************************
+	//******  class CGenerator_1Pos   ********
+	//model A: positive persistence with adv. Kernel equals base CGenerator.
+	//****************************************
+	class TSCGEN_DLLENTRY CGenerator_1Pos: public CGenerator
+	{
+	public:
+		CGenerator_1Pos(const doubles& distribution_,int seed_):CGenerator(distribution_, seed_)
+		{sample.resize((distribution.size()-1)*(distribution.size()-1));}
+		virtual ~CGenerator_1Pos(void){/*delete poly;delete alpha;*/}
+		CGenerator_1Pos(const CGenerator_1Pos& gen);
+		CGenerator_1Pos& operator=(const CGenerator_1Pos& gen);
+
+		const doubles& GetP(void){if(isInit)return pi;throw CGeneratorException();}
+
+	protected:
+		inline virtual void InitModel(void);
+		inline virtual void GenerateOne(void);
+	};
+
+	//****************************************
+	//****  class CGenerator_1Pos_mine   *****
+	//model B (mine, edit 11.04): P(j|i) = (1-pch)*[j==i] + pch*padv*[j==0] + pch*(1-padv)*p_j
+	//****************************************
+	class TSCGEN_DLLENTRY CGenerator_1Pos_mine : public CGenerator_1Pos
+	{
+	public:
+		CGenerator_1Pos_mine(const doubles& distribution_, int seed_) :CGenerator_1Pos(distribution_, seed_) {};
+		virtual ~CGenerator_1Pos_mine(void) {/*delete poly;delete alpha;*/ }
+		CGenerator_1Pos_mine(const CGenerator_1Pos_mine& gen);
+		CGenerator_1Pos_mine& operator=(const CGenerator_1Pos_mine& gen);
+
+	protected:
+		inline virtual void GenerateOne(void) override;
+	};
 }//namespace TSCGenetator

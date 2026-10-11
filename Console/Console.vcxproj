@@ -91,7 +91,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Debuger.cpp" />
+    <ClCompile Include="Debuger.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tsc_shell.cpp" />
     <ClCompile Include="Ecalc.cpp" />
     <ClCompile Include="HelperFunctions.cpp" />
     <ClCompile Include="InfoMatrix.cpp" />

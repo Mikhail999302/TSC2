@@ -59,4 +59,50 @@ public:
 	virtual /*implement*/ void setOptimize(int idx, bool val);
 
 };
+	//*************************************
+	//****   class CTSCModel_1Pos   *******
+	//model with adv (model A): p_ij from CTSCModelGenerator_1Pos
+	//*************************************
+
+	class TSCCALC_DLLENTRY CTSCModel_1Pos: public  CTSCModel
+	{
+	public:
+		CTSCModel_1Pos( int _dim, int _type,
+				MathModels::TLDotCacher& _ldotCacher,
+				MathModels::TInfoCacher& _infoCacher):
+			CTSCModel(_dim, _type, _ldotCacher, _infoCacher){};
+
+		virtual ~CTSCModel_1Pos(){};
+	public:
+
+		virtual /*implement*/ CMathParameterValues SetSimpleEstimates(const TSampleManager &_sample);
+		//Parameters Definition
+		virtual /*implement*/ MathCalc::MathString SetEstimatesFormulasStrRep(int _dim);
+		virtual /*implement*/ MathCalc::MathString FixSimpleEstimates(const CMathParameterValues& _simpleEstimates, bool _isMatrix=false);
+		virtual /*implement*/ TModelManager* CreateModelManager(int _width, int _height);
+	};
+
+
+	//*************************************
+	//****  class CTSCModel_1Pos_mine  *****
+	//model B: p_ij from CTSCModelGenerator_1Pos_mine
+	//*************************************
+
+	class TSCCALC_DLLENTRY CTSCModel_1Pos_mine : public  CTSCModel_1Pos
+	{
+	public:
+		CTSCModel_1Pos_mine(int _dim, int _type,
+			MathModels::TLDotCacher& _ldotCacher,
+			MathModels::TInfoCacher& _infoCacher) :
+			CTSCModel_1Pos(_dim, _type, _ldotCacher, _infoCacher) {};
+
+		virtual ~CTSCModel_1Pos_mine() {};
+	public:
+
+		virtual /*implement*/ CMathParameterValues SetSimpleEstimates(const TSampleManager& _sample);
+		//Parameters Definition
+		virtual /*implement*/ MathCalc::MathString SetEstimatesFormulasStrRep(int _dim);
+		virtual /*implement*/ MathCalc::MathString FixSimpleEstimates(const CMathParameterValues& _simpleEstimates, bool _isMatrix = false);
+		virtual /*implement*/ TModelManager* CreateModelManager(int _width, int _height);
+	};
 }//namespace GroupedTSC
