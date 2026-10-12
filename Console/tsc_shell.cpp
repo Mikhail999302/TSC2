@@ -1136,15 +1136,15 @@ namespace chi2test {
         initDumper();
 
         Params par;   // ѕараметры модели H0: m, известные p_i, p_ch, p_adv.
-        par.m = 3;
-        par.p_ch = 0.2;
-        par.p_adv = 0.05;
+        par.m = 4;
+        par.p_ch = 0.3;
+        par.p_adv = 0.03;
         par.p.clear();
-        par.p.push_back(0.5); par.p.push_back(0.3); par.p.push_back(0.2);   // p_i
+        par.p.push_back(2); par.p.push_back(1); par.p.push_back(1), par.p.push_back(1);   // p_i
         /*for (int i = 0; i < 6; ++i)
             par.p.push_back(1);*/
-        int N = 300;                // количество людей
-        int numTrials = 1000;        // количество p-values
+        int N = 80;                // количество людей
+        int numTrials = 10000;        // количество p-values
         double alpha = 0.05;          // уровень значимости
         bool modelIsA = true;        // true: модель ј
         int numUnknown = 0;        // количество неизвестных (0 или 2)
