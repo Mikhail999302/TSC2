@@ -576,7 +576,11 @@ namespace chi2test {
         switch (mode) {
         case 0: cells = m * m; break;   // NoneGroup
         case 2: cells = m + 3; break;   // StandardGroup
-        case 3: cells = 3; break;       // ShrinkGroup
+        case 3: {                       // ShrinkGroup: gruppirovka po produktam
+            const int w = (m >= 3) ? 3 : 2;
+            const int nu = numEstimated - (m - 1);   // numUnknown
+            return w * w - 1 - ((w - 1) + nu);
+        }
         default: cells = m * m; break;  // NoneGroup
         }
         return cells - 1 - numEstimated;
@@ -618,6 +622,29 @@ namespace chi2test {
     // df вычисляет библиотека: CPLevel::CalcChiValue(empiric) без df даёт
     // df = (число групп) - 1; из неё вычитается число оцениваемых параметров,
     // и получается df для расчёта p-value.
+    // ShrinkGroup (gruppirovka po produktam, razdel 3.3.2 raboty):
+    // produkty razbivayutsya na w klassov (0,1,2,1,2,...); kazhdoj yachejke (i,j)
+    // prisvaivaetsya gruppa class(i)*w + class(j) - polnoe razbienie vseh m*m yacheek.
+    template<class ReturnType = unsigned int, class ValueType = double>
+    class ProductGrouping : public Tsc::Grouping::IMergeGrouping<ReturnType, ValueType>
+    {
+        std::vector<ReturnType> m_map;
+    public:
+        ProductGrouping(int m) : Tsc::Grouping::IMergeGrouping<ReturnType, ValueType>(0)
+        {
+            const int w = (m >= 3) ? 3 : 2;
+            std::vector<int> cl(m);
+            for (int i = 0; i < m; ++i)
+                cl[i] = (i == 0) ? 0 : (2 - (i % 2));
+            m_map.resize(static_cast<size_t>(m) * m);
+            for (int i = 0; i < m; ++i)
+                for (int j = 0; j < m; ++j)
+                    m_map[static_cast<size_t>(i) * m + j] =
+                        static_cast<ReturnType>(cl[i] * w + cl[j]);
+        }
+        ReturnTypes operator()() { return m_map; }
+    };
+
     static ChiResult chiSquare(const Counts& counts, int N, const Params& par,
         bool testModel1, int mode, int numEstimated)
     {
@@ -625,6 +652,7 @@ namespace chi2test {
         r.stat = 0.0; r.plevel = 0.0; r.minNPi = 0.0; r.df = 0; r.defined = false;
 
         const int m = par.m;
+        const int wShrink = (m >= 3) ? 3 : 2;   // ShrinkGroup: chislo klassov produktov
         const std::vector<double> allProbs = jointProbs(par, testModel1);
         if (allProbs.size() != static_cast<size_t>(m) * m) return r;
 
@@ -645,7 +673,7 @@ namespace chi2test {
                 chi.Init(theoretic, N, strategy);
             }
             else if (mode == 3) {
-                Tsc::Grouping::ShrinkGroup<PLevel::uint, double> strategy;
+                ProductGrouping<PLevel::uint, double> strategy(m);
                 chi.Init(theoretic, N, strategy);
             }
             else {
@@ -656,7 +684,9 @@ namespace chi2test {
             // Первое вычисление: библиотека выдаёт df = (число групп) - 1.
             chi.CalcChiValue(empiric, /*isCheckSize=*/false);
             const int dfAll = chi.GetPLevelData().df;
-            const int df = dfAll - numEstimated;
+            const int df = (mode == 3)
+                ? dfAll - ((wShrink - 1) + (numEstimated - (m - 1)))
+                : dfAll - numEstimated;
             r.df = df;
             if (df < 1) return r;              // df < 1: критерий не определён
 
@@ -1140,15 +1170,18 @@ namespace chi2test {
         par.p_ch = 0.3;
         par.p_adv = 0.03;
         par.p.clear();
-        par.p.push_back(2); par.p.push_back(1); par.p.push_back(1), par.p.push_back(1);   // p_i
+        par.p.push_back(2);
+        par.p.push_back(1);
+        par.p.push_back(1);
+        par.p.push_back(1);   // p_i
         /*for (int i = 0; i < 6; ++i)
             par.p.push_back(1);*/
-        int N = 80;                // количество людей
-        int numTrials = 10000;        // количество p-values
+        int N = 500;                // количество людей
+        int numTrials = 3000;        // количество p-values
         double alpha = 0.05;          // уровень значимости
         bool modelIsA = true;        // true: модель А
-        int numUnknown = 0;        // количество неизвестных (0 или 2)
-        int numUnknownAlt = 0;       // для power (0 или 2)
+        int numUnknown = 2;        // количество неизвестных (0 или 2)
+        int numUnknownAlt = 2;       // для power (0 или 2)
         bool fixedSeed = false;      // true: воспроизводимые генерации
         bool sanityCheck = false;      //   true: напечатать сгенерированные таблицы и суммы строк/столбцов
         g_transposeSample = false;   // true, если категории TSC заданы наоборот
